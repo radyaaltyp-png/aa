@@ -1,0 +1,64 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function admin() {
+      return signedIn() && (
+        request.auth.token.admin == true
+        || (
+          request.auth.token.email_verified == true
+          && request.auth.token.email in ['abdoaltyp8@gmail.com', 'admin@sahty.com']
+        )
+      );
+    }
+
+    function validPrivateDocument() {
+      return request.resource != null
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/(jpeg|png|webp)|application/pdf');
+    }
+
+    function validProfileImage() {
+      return request.resource != null
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/(jpeg|png|webp)');
+    }
+
+    match /doctorApplications/{uid}/{fileName} {
+      allow read: if admin() || (signedIn() && request.auth.uid == uid);
+      allow create, update: if admin() || (signedIn() && request.auth.uid == uid && validPrivateDocument());
+      allow delete: if admin() || (signedIn() && request.auth.uid == uid);
+    }
+
+    match /profileImages/{uid}/{fileName} {
+      allow read: if admin() || (signedIn() && request.auth.uid == uid);
+      allow create, update: if signedIn() && request.auth.uid == uid && validProfileImage();
+      allow delete: if signedIn() && request.auth.uid == uid;
+    }
+
+    match /medicalRecords/{patientId}/{bookingId}/{fileName} {
+      allow read: if admin() || (signedIn() && request.auth.uid == patientId);
+      allow create, update: if signedIn() && request.auth.uid == patientId && validPrivateDocument();
+      allow delete: if admin() || (signedIn() && request.auth.uid == patientId);
+    }
+
+    match /testResults/{patientId}/{bookingId}/{fileName} {
+      allow read: if admin() || (signedIn() && request.auth.uid == patientId);
+      allow create, update: if signedIn() && request.auth.uid == patientId && validPrivateDocument();
+      allow delete: if admin() || (signedIn() && request.auth.uid == patientId);
+    }
+
+    match /prescriptions/{patientId}/{bookingId}/{fileName} {
+      allow read: if admin() || (signedIn() && request.auth.uid == patientId);
+      allow create, update: if signedIn() && request.auth.uid == patientId && validPrivateDocument();
+      allow delete: if admin() || (signedIn() && request.auth.uid == patientId);
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

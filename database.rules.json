@@ -1,0 +1,271 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "users": {
+      "$uid": {
+        ".read": "auth != null && (auth.uid == $uid || ((auth.token.email == 'abdoaltyp8@gmail.com' || auth.token.email == 'admin@sahty.com') && auth.token.email_verified == true))",
+        ".write": "auth != null && ((auth.token.admin == true || ((auth.token.email == 'abdoaltyp8@gmail.com' || auth.token.email == 'admin@sahty.com') && auth.token.email_verified == true)) || (auth.uid == $uid && ((!data.exists() && newData.child('role').val() == 'PATIENT' && ((newData.child('status').val() == 'VERIFIED' && (auth.token.firebase.sign_in_provider == 'phone' || auth.token.firebase.sign_in_provider == 'google.com' || auth.token.firebase.sign_in_provider == 'facebook.com' || auth.token.email_verified == true)) || (newData.child('status').val() == 'PENDING_VERIFICATION' && auth.token.firebase.sign_in_provider == 'password' && newData.child('email').val() == auth.token.email))) || (data.exists() && newData.child('id').val() == data.child('id').val() && newData.child('email').val() == data.child('email').val() && newData.child('role').val() == data.child('role').val() && newData.child('professionalType').val() == data.child('professionalType').val() && (newData.child('status').val() == data.child('status').val() || (data.child('status').val() == 'PENDING_VERIFICATION' && newData.child('status').val() == 'VERIFIED' && auth.token.email_verified == true)) && newData.child('age').val() == data.child('age').val() && newData.child('avatarUrl').val() == data.child('avatarUrl').val()))))",
+        ".validate": "newData.hasChildren(['id', 'fullName', 'email', 'role', 'status']) && newData.child('id').val() == $uid && newData.child('fullName').isString() && newData.child('email').isString() && (newData.child('role').val() == 'PATIENT' || newData.child('role').val() == 'DOCTOR' || newData.child('role').val() == 'NURSE' || newData.child('role').val() == 'CONSULTANT' || newData.child('role').val() == 'ADMIN') && (newData.child('status').val() == 'PENDING_VERIFICATION' || newData.child('status').val() == 'PENDING_REVIEW' || newData.child('status').val() == 'VERIFIED' || newData.child('status').val() == 'REJECTED' || newData.child('status').val() == 'SUSPENDED') && (!newData.child('age').exists() || (newData.child('age').isNumber() && newData.child('age').val() >= 1 && newData.child('age').val() <= 120))"
+      },
+      ".read": "auth != null && (auth.token.admin == true || ((auth.token.email == 'abdoaltyp8@gmail.com' || auth.token.email == 'admin@sahty.com') && auth.token.email_verified == true))"
+    },
+    "activityLogs": {
+      "$uid": {
+        ".read": "auth != null && (auth.uid == $uid || auth.token.admin == true)",
+        "$activityId": {
+          ".write": "auth != null && auth.uid == $uid && !data.exists() && newData.child('actorUid').val() == auth.uid && ((newData.child('action').val() == 'account.created' && !root.child('users').child(auth.uid).exists() && newData.child('actorRole').val() == 'PATIENT') || newData.child('actorRole').val() == root.child('users').child(auth.uid).child('role').val())",
+          ".validate": "newData.hasChildren(['actorUid', 'actorRole', 'action', 'targetId', 'targetType', 'createdAt']) && (newData.child('action').val() == 'account.created' || newData.child('action').val() == 'appointment.created' || newData.child('action').val() == 'appointment.status_changed' || newData.child('action').val() == 'prescription.created' || newData.child('action').val() == 'profile.updated') && (newData.child('targetType').val() == 'appointment' || newData.child('targetType').val() == 'prescription' || newData.child('targetType').val() == 'profile') && newData.child('targetId').isString() && newData.child('createdAt').isString()"
+        }
+      }
+    },
+    "appointments": {
+      ".read": "(auth != null && (auth.token.admin == true || ((auth.token.email == 'abdoaltyp8@gmail.com' || auth.token.email == 'admin@sahty.com') && auth.token.email_verified == true))) || (auth != null && (auth.token.admin == true || (root.child('users').child(auth.uid).child('role').val() == 'PATIENT' && root.child('users').child(auth.uid).child('status').val() == 'VERIFIED' && query.orderByChild == 'patientId' && query.equalTo == auth.uid) || (root.child('users').child(auth.uid).child('role').val() == 'DOCTOR' && root.child('users').child(auth.uid).child('status').val() == 'VERIFIED' && query.orderByChild == 'doctorId' && query.equalTo == auth.uid) || (root.child('users').child(auth.uid).child('role').val() == 'NURSE' && root.child('users').child(auth.uid).child('status').val() == 'VERIFIED' && query.orderByChild == 'nurseId' && query.equalTo == auth.uid)))",
+      ".indexOn": [
+        "patientId",
+        "doctorId",
+        "nurseId"
+      ],
+      "$appointmentId": {
+        ".read": "auth != null && (auth.token.admin == true || (auth.uid == data.child('patientId').val() && root.child('users').child(auth.uid).child('role').val() == 'PATIENT' && root.child('users').child(auth.uid).child('status').val() == 'VERIFIED') || (auth.uid == data.child('doctorId').val() && root.child('users').child(auth.uid).child('role').val() == 'DOCTOR' && root.child('users').child(auth.uid).child('status').val() == 'VERIFIED') || (auth.uid == data.child('nurseId').val() && root.child('users').child(auth.uid).child('role').val() == 'NURSE' && root.child('users').child(auth.uid).child('status').val() == 'VERIFIED'))",
+        ".write": false,
+        ".validate": "newData.hasChildren(['id', 'patientId', 'doctorId', 'serviceId', 'serviceName', 'appointmentType', 'date', 'time', 'duration', 'price', 'status', 'paymentStatus', 'paymentMethod', 'notes', 'createdAt', 'doctorName', 'patientName']) && newData.child('id').val() == $appointmentId && newData.child('patientId').isString() && newData.child('doctorId').isString() && root.child('users').child(newData.child('patientId').val()).child('role').val() == 'PATIENT' && root.child('users').child(newData.child('doctorId').val()).child('role').val() == 'DOCTOR' && root.child('doctors').child(newData.child('doctorId').val()).child('verified').val() == true && root.child('services').child(newData.child('serviceId').val()).child('doctorId').val() == newData.child('doctorId').val() && root.child('services').child(newData.child('serviceId').val()).child('active').val() == true && root.child('services').child(newData.child('serviceId').val()).child('price').val() == newData.child('price').val() && root.child('services').child(newData.child('serviceId').val()).child('duration').val() == newData.child('duration').val() && root.child('services').child(newData.child('serviceId').val()).child('type').val() == newData.child('appointmentType').val() && newData.child('price').isNumber() && newData.child('duration').isNumber() && newData.child('date').isString() && newData.child('time').isString() && (newData.child('status').val() == 'pending_payment' || newData.child('status').val() == 'confirmed' || newData.child('status').val() == 'in_progress' || newData.child('status').val() == 'completed' || newData.child('status').val() == 'cancelled' || newData.child('status').val() == 'no_show') && (newData.child('paymentStatus').val() == 'pending' || newData.child('paymentStatus').val() == 'paid' || newData.child('paymentStatus').val() == 'failed' || newData.child('paymentStatus').val() == 'refunded') && (newData.child('paymentMethod').val() == 'card' || newData.child('paymentMethod').val() == 'fawry' || newData.child('paymentMethod').val() == 'instapay' || newData.child('paymentMethod').val() == 'cash_on_site' || newData.child('paymentMethod').val() == 'paymob') && (!data.exists() || newData.child('paymentStatus').val() == data.child('paymentStatus').val())",
+        "id": {
+          ".validate": "!data.exists() || newData.val() == data.val()"
+        },
+        "patientId": {
+          ".validate": "!data.exists() || newData.val() == data.val()"
+        },
+        "doctorId": {
+          ".validate": "!data.exists() || newData.val() == data.val()"
+        },
+        "serviceId": {
+          ".validate": "!data.exists() || newData.val() == data.val()"
+        },
+        "serviceName": {
+          ".validate": "!data.exists() || newData.val() == data.val()"
+        },
+        "appointmentType": {
+          ".validate": "!data.exists() || newData.val() == data.val()"
+        },
+        "date": {
+          ".validate": "!data.exists() || newData.val() == data.val()"
+        },
+        "time": {
+          ".validate": "!data.exists() || newData.val() == data.val()"
+        },
+        "duration": {
+          ".validate": "!data.exists() || newData.val() == data.val()"
+        },
+        "price": {
+          ".validate": "!data.exists() || newData.val() == data.val()"
+        },
+        "paymentStatus": {
+          ".validate": "!data.exists() || newData.val() == data.val()"
+        },
+        "paymentMethod": {
+          ".validate": "!data.exists() || newData.val() == data.val()"
+        },
+        "createdAt": {
+          ".validate": "!data.exists() || newData.val() == data.val()"
+        },
+        "doctorName": {
+          ".validate": "!data.exists() || newData.val() == data.val()"
+        },
+        "patientName": {
+          ".validate": "!data.exists() || newData.val() == data.val()"
+        },
+        "specialtyId": {
+          ".validate": "!data.exists() || newData.val() == data.val()"
+        },
+        "notes": {
+          ".validate": "!data.exists() || newData.val() == data.val()"
+        },
+        "status": {
+          ".validate": "auth != null && (auth.token.admin == true || (!data.exists() && newData.val() == 'pending_payment' && root.child('users').child(auth.uid).child('role').val() == 'PATIENT' && root.child('users').child(auth.uid).child('status').val() == 'VERIFIED') || (auth.uid == root.child('appointments').child($appointmentId).child('doctorId').val() && root.child('users').child(auth.uid).child('role').val() == 'DOCTOR' && root.child('users').child(auth.uid).child('status').val() == 'VERIFIED' && root.child('appointments').child($appointmentId).child('paymentStatus').val() == 'paid') || (auth.uid == root.child('appointments').child($appointmentId).child('patientId').val() && root.child('users').child(auth.uid).child('role').val() == 'PATIENT' && root.child('users').child(auth.uid).child('status').val() == 'VERIFIED' && newData.val() == 'cancelled'))"
+        }
+      }
+    },
+    "prescriptions": {
+      ".read": "(auth != null && (auth.token.admin == true || ((auth.token.email == 'abdoaltyp8@gmail.com' || auth.token.email == 'admin@sahty.com') && auth.token.email_verified == true))) || (auth != null && (auth.token.admin == true || (root.child('users').child(auth.uid).child('role').val() == 'PATIENT' && root.child('users').child(auth.uid).child('status').val() == 'VERIFIED' && query.orderByChild == 'patientId' && query.equalTo == auth.uid) || (root.child('users').child(auth.uid).child('role').val() == 'DOCTOR' && root.child('users').child(auth.uid).child('status').val() == 'VERIFIED' && query.orderByChild == 'doctorId' && query.equalTo == auth.uid)))",
+      ".indexOn": [
+        "patientId",
+        "doctorId"
+      ],
+      "$prescriptionId": {
+        ".read": "auth != null && (auth.token.admin == true || (auth.uid == data.child('patientId').val() && root.child('users').child(auth.uid).child('role').val() == 'PATIENT' && root.child('users').child(auth.uid).child('status').val() == 'VERIFIED') || (auth.uid == data.child('doctorId').val() && root.child('users').child(auth.uid).child('role').val() == 'DOCTOR' && root.child('users').child(auth.uid).child('status').val() == 'VERIFIED'))",
+        ".write": false,
+        ".validate": "newData.hasChildren(['id', 'appointmentId', 'patientId', 'doctorId', 'doctorName', 'diagnosis', 'medications', 'createdAt']) && newData.child('id').val() == $prescriptionId && newData.child('patientId').isString() && newData.child('doctorId').isString() && newData.child('doctorName').val() == root.child('users').child(newData.child('doctorId').val()).child('fullName').val() && newData.child('diagnosis').isString() && newData.child('medications').isString()"
+      }
+    },
+    "conversations": {
+      "$appointmentId": {
+        ".read": "auth != null && root.child('appointments').child($appointmentId).child('paymentStatus').val() == 'paid' && (root.child('appointments').child($appointmentId).child('status').val() == 'confirmed' || root.child('appointments').child($appointmentId).child('status').val() == 'completed') && ((auth.uid == root.child('appointments').child($appointmentId).child('patientId').val() && root.child('users').child(auth.uid).child('role').val() == 'PATIENT') || (auth.uid == root.child('appointments').child($appointmentId).child('doctorId').val() && root.child('users').child(auth.uid).child('role').val() == 'DOCTOR'))",
+        "messages": {
+          "$messageId": {
+            ".write": "auth != null && !data.exists() && newData.child('authorId').val() == auth.uid && root.child('appointments').child($appointmentId).child('paymentStatus').val() == 'paid' && (root.child('appointments').child($appointmentId).child('status').val() == 'confirmed' || root.child('appointments').child($appointmentId).child('status').val() == 'completed') && ((auth.uid == root.child('appointments').child($appointmentId).child('patientId').val() && root.child('users').child(auth.uid).child('role').val() == 'PATIENT') || (auth.uid == root.child('appointments').child($appointmentId).child('doctorId').val() && root.child('users').child(auth.uid).child('role').val() == 'DOCTOR'))",
+            ".validate": "newData.hasChildren(['authorId', 'text', 'createdAt']) && newData.child('authorId').val() == auth.uid && newData.child('text').isString() && newData.child('text').val().length > 0 && newData.child('text').val().length <= 4000 && newData.child('createdAt').isNumber()"
+          }
+        }
+      }
+    },
+    "doctors": {
+      ".read": "(auth != null && (auth.token.admin == true || ((auth.token.email == 'abdoaltyp8@gmail.com' || auth.token.email == 'admin@sahty.com') && auth.token.email_verified == true))) || (query.orderByChild == 'verified' && query.equalTo == true)",
+      "$doctorId": {
+        ".read": "(data.child('verified').val() == true && data.child('active').val() == true) || (auth != null && (auth.token.admin == true || ((auth.token.email == 'abdoaltyp8@gmail.com' || auth.token.email == 'admin@sahty.com') && auth.token.email_verified == true) || auth.uid == $doctorId))",
+        ".write": "auth != null && (auth.token.admin == true || (auth.token.email == 'abdoaltyp8@gmail.com' && auth.token.email_verified == true))",
+        ".validate": "newData.hasChildren(['id', 'fullName', 'specialtyId', 'verified', 'active']) && newData.child('id').val() == $doctorId"
+      },
+      ".indexOn": [
+        "verified"
+      ]
+    },
+    "nurses": {
+      "$nurseId": {
+        ".read": "auth != null && (auth.uid == $nurseId || auth.token.admin == true)",
+        ".write": "auth != null && (auth.token.admin == true || (auth.token.email == 'abdoaltyp8@gmail.com' && auth.token.email_verified == true))"
+      },
+      ".read": "auth != null && (auth.token.admin == true || ((auth.token.email == 'abdoaltyp8@gmail.com' || auth.token.email == 'admin@sahty.com') && auth.token.email_verified == true))"
+    },
+    "consultants": {
+      "$consultantId": {
+        ".read": "auth != null && (auth.uid == $consultantId || ((auth.token.email == 'abdoaltyp8@gmail.com' || auth.token.email == 'admin@sahty.com') && auth.token.email_verified == true))",
+        ".write": "auth != null && (auth.token.admin == true || (auth.token.email == 'abdoaltyp8@gmail.com' && auth.token.email_verified == true))"
+      }
+    },
+    "specialties": {
+      ".read": "(auth != null && (auth.token.admin == true || ((auth.token.email == 'abdoaltyp8@gmail.com' || auth.token.email == 'admin@sahty.com') && auth.token.email_verified == true))) || (query.orderByChild == 'active' && query.equalTo == true)",
+      "$specialtyId": {
+        ".read": "auth != null && (auth.token.admin == true || ((auth.token.email == 'abdoaltyp8@gmail.com' || auth.token.email == 'admin@sahty.com') && auth.token.email_verified == true) || data.child('active').val() == true)",
+        ".write": "auth != null && (auth.token.admin == true || (auth.token.email == 'abdoaltyp8@gmail.com' && auth.token.email_verified == true))"
+      },
+      ".indexOn": [
+        "active"
+      ]
+    },
+    "services": {
+      ".read": "(auth != null && (auth.token.admin == true || ((auth.token.email == 'abdoaltyp8@gmail.com' || auth.token.email == 'admin@sahty.com') && auth.token.email_verified == true))) || (query.orderByChild == 'active' && query.equalTo == true)",
+      "$serviceId": {
+        ".read": "auth != null && (auth.token.admin == true || ((auth.token.email == 'abdoaltyp8@gmail.com' || auth.token.email == 'admin@sahty.com') && auth.token.email_verified == true) || data.child('active').val() == true)",
+        ".write": "auth != null && (auth.token.admin == true || ((auth.token.email == 'abdoaltyp8@gmail.com' || auth.token.email == 'admin@sahty.com') && auth.token.email_verified == true))"
+      },
+      ".indexOn": [
+        "active"
+      ]
+    },
+    "nursingRequests": {
+      "$requestId": {
+        ".read": "auth != null && (data.child('patientId').val() == auth.uid || data.child('nurseId').val() == auth.uid || auth.token.admin == true)",
+        ".write": "auth != null && (auth.token.admin == true || (!data.exists() && auth.uid == newData.child('patientId').val() && root.child('users').child(auth.uid).child('role').val() == 'PATIENT' && newData.child('status').val() == 'PENDING') || (data.exists() && auth.uid == data.child('nurseId').val() && root.child('users').child(auth.uid).child('role').val() == 'NURSE' && data.child('status').val() == 'PENDING' && newData.child('status').val() == 'ACCEPTED' && newData.child('patientId').val() == data.child('patientId').val() && newData.child('nurseId').val() == data.child('nurseId').val()))",
+        ".validate": "newData.hasChildren(['id', 'patientId', 'status']) && newData.child('id').val() == $requestId && root.child('users').child(newData.child('patientId').val()).child('role').val() == 'PATIENT' && (newData.child('status').val() == 'PENDING' || newData.child('status').val() == 'ACCEPTED' || newData.child('status').val() == 'COMPLETED' || newData.child('status').val() == 'CANCELLED')"
+      }
+    },
+    "staffVerificationRequests": {
+      ".read": false,
+      "$uid": {
+        ".read": false,
+        ".write": false,
+        ".validate": "newData.hasChildren(['uid', 'fullName', 'email', 'phone', 'roleRequested', 'verificationStatus', 'accountStatus', 'submittedAt']) && newData.child('uid').val() == $uid && (newData.child('roleRequested').val() == 'DOCTOR' || newData.child('roleRequested').val() == 'CONSULTANT' || newData.child('roleRequested').val() == 'NURSE') && (newData.child('verificationStatus').val() == 'PENDING' || newData.child('verificationStatus').val() == 'VERIFIED' || newData.child('verificationStatus').val() == 'REJECTED' || newData.child('verificationStatus').val() == 'SUSPENDED') && (newData.child('accountStatus').val() == 'PENDING_REVIEW' || newData.child('accountStatus').val() == 'ACTIVE' || newData.child('accountStatus').val() == 'REJECTED' || newData.child('accountStatus').val() == 'SUSPENDED')"
+      }
+    },
+    "verificationRequests": {
+      ".read": "auth != null && (auth.token.admin == true || ((auth.token.email == 'abdoaltyp8@gmail.com' || auth.token.email == 'admin@sahty.com') && auth.token.email_verified == true))",
+      "$uid": {
+        ".read": "auth != null && (auth.uid == $uid || auth.token.admin == true || ((auth.token.email == 'abdoaltyp8@gmail.com' || auth.token.email == 'admin@sahty.com') && auth.token.email_verified == true))",
+        ".write": "auth != null && ((auth.uid == $uid && auth.token.email == newData.child('email').val() && root.child('users').child(auth.uid).child('role').val() == 'PATIENT' && (root.child('users').child(auth.uid).child('status').val() == 'VERIFIED' || root.child('users').child(auth.uid).child('status').val() == 'PENDING_VERIFICATION') && ((!data.exists() && newData.child('verificationStatus').val() == 'pending') || (data.exists() && data.child('verificationStatus').val() == 'rejected' && newData.child('verificationStatus').val() == 'pending')) && newData.child('uid').val() == auth.uid && newData.child('reviewedBy').val() == null && newData.child('reviewedAt').val() == null && newData.child('rejectionReason').val() == null) || ((auth.token.admin == true || ((auth.token.email == 'abdoaltyp8@gmail.com' || auth.token.email == 'admin@sahty.com') && auth.token.email_verified == true)) && data.exists() && data.child('verificationStatus').val() == 'pending' && (newData.child('verificationStatus').val() == 'approved' || newData.child('verificationStatus').val() == 'rejected') && newData.child('uid').val() == data.child('uid').val() && newData.child('fullName').val() == data.child('fullName').val() && newData.child('email').val() == data.child('email').val() && newData.child('phone').val() == data.child('phone').val() && newData.child('specialty').val() == data.child('specialty').val() && newData.child('experienceYears').val() == data.child('experienceYears').val() && newData.child('profilePhotoPath').val() == data.child('profilePhotoPath').val() && newData.child('medicalLicensePath').val() == data.child('medicalLicensePath').val() && newData.child('nationalIdFrontPath').val() == data.child('nationalIdFrontPath').val() && newData.child('nationalIdBackPath').val() == data.child('nationalIdBackPath').val() && newData.child('submittedAt').val() == data.child('submittedAt').val() && newData.child('reviewedBy').val() == auth.uid && newData.child('reviewedAt').isString() && (!newData.child('rejectionReason').exists() || newData.child('rejectionReason').isString())))",
+        ".validate": "newData.hasChildren(['uid', 'roleRequested', 'fullName', 'email', 'phone', 'specialty', 'experienceYears', 'profilePhotoPath', 'medicalLicensePath', 'nationalIdFrontPath', 'nationalIdBackPath', 'verificationStatus', 'submittedAt']) && newData.child('uid').val() == $uid && (newData.child('roleRequested').val() == 'DOCTOR' || newData.child('roleRequested').val() == 'CONSULTANT') && (newData.child('verificationStatus').val() == 'pending' || newData.child('verificationStatus').val() == 'approved' || newData.child('verificationStatus').val() == 'rejected') && newData.child('experienceYears').isNumber() && newData.child('experienceYears').val() >= 0 && newData.child('profilePhotoPath').isString() && newData.child('medicalLicensePath').isString() && newData.child('nationalIdFrontPath').isString() && newData.child('nationalIdBackPath').isString()"
+      }
+    },
+    "auditLogs": {
+      ".read": "auth != null && auth.token.email == 'abdoaltyp8@gmail.com' && auth.token.email_verified == true",
+      "$logId": {
+        ".read": "auth != null && auth.token.email == 'abdoaltyp8@gmail.com' && auth.token.email_verified == true",
+        ".write": "auth != null && auth.token.email == 'abdoaltyp8@gmail.com' && auth.token.email_verified == true && !data.exists()",
+        ".validate": "newData.hasChildren(['action', 'adminUid', 'targetUserUid', 'timestamp', 'previousStatus', 'newStatus', 'reason']) && newData.child('adminUid').val() == auth.uid && newData.child('targetUserUid').isString() && newData.child('timestamp').isString() && newData.child('action').isString()"
+      }
+    },
+    "notifications": {
+      "$uid": {
+        ".read": "auth != null && (auth.uid == $uid || ((auth.token.email == 'abdoaltyp8@gmail.com' || auth.token.email == 'admin@sahty.com') && auth.token.email_verified == true))",
+        "$notificationId": {
+          ".write": "auth != null && (((auth.token.email == 'abdoaltyp8@gmail.com' || auth.token.email == 'admin@sahty.com') && auth.token.email_verified == true) || (auth.uid == $uid && data.exists() && newData.child('type').val() == data.child('type').val() && newData.child('message').val() == data.child('message').val() && newData.child('createdAt').val() == data.child('createdAt').val() && newData.child('read').val() == true))",
+          ".validate": "newData.hasChildren(['type', 'message', 'createdAt', 'read']) && newData.child('type').isString() && newData.child('message').isString() && newData.child('createdAt').isString() && newData.child('read').isBoolean()"
+        }
+      }
+    },
+    "callSessions": {
+      "$appointmentId": {
+        ".read": "auth != null && root.child('appointments').child($appointmentId).child('appointmentType').val() == 'online' && root.child('appointments').child($appointmentId).child('status').val() == 'confirmed' && root.child('appointments').child($appointmentId).child('paymentStatus').val() == 'paid' && ((auth.uid == root.child('appointments').child($appointmentId).child('patientId').val() && root.child('users').child(auth.uid).child('role').val() == 'PATIENT' && root.child('users').child(auth.uid).child('status').val() == 'VERIFIED') || (auth.uid == root.child('appointments').child($appointmentId).child('doctorId').val() && root.child('users').child(auth.uid).child('role').val() == 'DOCTOR' && root.child('users').child(auth.uid).child('status').val() == 'VERIFIED' && root.child('doctors').child(auth.uid).child('verified').val() == true && root.child('doctors').child(auth.uid).child('active').val() == true))",
+        ".write": "newData.val() == null && auth != null && root.child('appointments').child($appointmentId).child('appointmentType').val() == 'online' && root.child('appointments').child($appointmentId).child('status').val() == 'confirmed' && root.child('appointments').child($appointmentId).child('paymentStatus').val() == 'paid' && ((auth.uid == root.child('appointments').child($appointmentId).child('patientId').val() && root.child('users').child(auth.uid).child('role').val() == 'PATIENT' && root.child('users').child(auth.uid).child('status').val() == 'VERIFIED') || (auth.uid == root.child('appointments').child($appointmentId).child('doctorId').val() && root.child('users').child(auth.uid).child('role').val() == 'DOCTOR' && root.child('users').child(auth.uid).child('status').val() == 'VERIFIED' && root.child('doctors').child(auth.uid).child('verified').val() == true && root.child('doctors').child(auth.uid).child('active').val() == true))",
+        "patientId": {
+          ".write": "auth != null && root.child('appointments').child($appointmentId).child('appointmentType').val() == 'online' && root.child('appointments').child($appointmentId).child('status').val() == 'confirmed' && root.child('appointments').child($appointmentId).child('paymentStatus').val() == 'paid' && auth.uid == root.child('appointments').child($appointmentId).child('patientId').val() && root.child('users').child(auth.uid).child('role').val() == 'PATIENT' && root.child('users').child(auth.uid).child('status').val() == 'VERIFIED' && newData.val() == auth.uid",
+          ".validate": "newData.isString()"
+        },
+        "doctorId": {
+          ".write": "auth != null && root.child('appointments').child($appointmentId).child('appointmentType').val() == 'online' && root.child('appointments').child($appointmentId).child('status').val() == 'confirmed' && root.child('appointments').child($appointmentId).child('paymentStatus').val() == 'paid' && auth.uid == root.child('appointments').child($appointmentId).child('doctorId').val() && root.child('users').child(auth.uid).child('role').val() == 'DOCTOR' && root.child('users').child(auth.uid).child('status').val() == 'VERIFIED' && root.child('doctors').child(auth.uid).child('verified').val() == true && root.child('doctors').child(auth.uid).child('active').val() == true && newData.val() == auth.uid",
+          ".validate": "newData.isString()"
+        },
+        "offer": {
+          ".write": "auth != null && root.child('appointments').child($appointmentId).child('appointmentType').val() == 'online' && root.child('appointments').child($appointmentId).child('status').val() == 'confirmed' && root.child('appointments').child($appointmentId).child('paymentStatus').val() == 'paid' && auth.uid == root.child('appointments').child($appointmentId).child('patientId').val() && root.child('users').child(auth.uid).child('role').val() == 'PATIENT' && root.child('users').child(auth.uid).child('status').val() == 'VERIFIED' && newData.child('type').val() == 'offer' && newData.child('sdp').isString()",
+          ".validate": "newData.hasChildren(['type', 'sdp']) && newData.child('type').val() == 'offer'"
+        },
+        "answer": {
+          ".write": "auth != null && root.child('appointments').child($appointmentId).child('appointmentType').val() == 'online' && root.child('appointments').child($appointmentId).child('status').val() == 'confirmed' && root.child('appointments').child($appointmentId).child('paymentStatus').val() == 'paid' && auth.uid == root.child('appointments').child($appointmentId).child('doctorId').val() && root.child('users').child(auth.uid).child('role').val() == 'DOCTOR' && root.child('users').child(auth.uid).child('status').val() == 'VERIFIED' && root.child('doctors').child(auth.uid).child('verified').val() == true && root.child('doctors').child(auth.uid).child('active').val() == true && newData.child('type').val() == 'answer' && newData.child('sdp').isString()",
+          ".validate": "newData.hasChildren(['type', 'sdp']) && newData.child('type').val() == 'answer'"
+        },
+        "iceCandidates": {
+          "$side": {
+            "$candidateId": {
+              ".write": "auth != null && root.child('appointments').child($appointmentId).child('appointmentType').val() == 'online' && root.child('appointments').child($appointmentId).child('status').val() == 'confirmed' && root.child('appointments').child($appointmentId).child('paymentStatus').val() == 'paid' && (($side == 'patient' && auth.uid == root.child('appointments').child($appointmentId).child('patientId').val() && root.child('users').child(auth.uid).child('role').val() == 'PATIENT' && root.child('users').child(auth.uid).child('status').val() == 'VERIFIED') || ($side == 'doctor' && auth.uid == root.child('appointments').child($appointmentId).child('doctorId').val() && root.child('users').child(auth.uid).child('role').val() == 'DOCTOR' && root.child('users').child(auth.uid).child('status').val() == 'VERIFIED' && root.child('doctors').child(auth.uid).child('verified').val() == true && root.child('doctors').child(auth.uid).child('active').val() == true))",
+              ".validate": "newData.hasChildren(['candidate']) && newData.child('candidate').isString()"
+            }
+          }
+        },
+        "state": {
+          ".write": "auth != null && root.child('appointments').child($appointmentId).child('appointmentType').val() == 'online' && root.child('appointments').child($appointmentId).child('status').val() == 'confirmed' && root.child('appointments').child($appointmentId).child('paymentStatus').val() == 'paid' && ((auth.uid == root.child('appointments').child($appointmentId).child('patientId').val() && root.child('users').child(auth.uid).child('role').val() == 'PATIENT' && root.child('users').child(auth.uid).child('status').val() == 'VERIFIED') || (auth.uid == root.child('appointments').child($appointmentId).child('doctorId').val() && root.child('users').child(auth.uid).child('role').val() == 'DOCTOR' && root.child('users').child(auth.uid).child('status').val() == 'VERIFIED' && root.child('doctors').child(auth.uid).child('verified').val() == true && root.child('doctors').child(auth.uid).child('active').val() == true))",
+          ".validate": "newData.val() == 'waiting' || newData.val() == 'connecting' || newData.val() == 'connected' || newData.val() == 'ended'"
+        }
+      }
+    },
+    "appointmentSlots": {
+      "$doctorId": {
+        "$date": {
+          "$time": {
+            ".read": "auth != null && (auth.token.admin == true || auth.uid == $doctorId || !data.exists() || data.child('patientId').val() == auth.uid || (data.child('expiresAt').isNumber() && data.child('expiresAt').val() > 0 && data.child('expiresAt').val() < now))",
+            ".write": false,
+            ".validate": "newData.hasChildren(['appointmentId', 'patientId', 'serviceId', 'expiresAt']) && newData.child('appointmentId').isString() && newData.child('patientId').isString() && newData.child('serviceId').isString() && newData.child('expiresAt').isNumber()"
+          }
+        }
+      }
+    },
+    "payments": {
+      ".read": "(auth != null && (auth.token.admin == true || ((auth.token.email == 'abdoaltyp8@gmail.com' || auth.token.email == 'admin@sahty.com') && auth.token.email_verified == true))) || (auth != null && query.orderByChild == 'userId' && query.equalTo == auth.uid)",
+      ".indexOn": [
+        "userId"
+      ],
+      "$paymentId": {
+        ".read": "auth != null && (auth.token.admin == true || ((auth.token.email == 'abdoaltyp8@gmail.com' || auth.token.email == 'admin@sahty.com') && auth.token.email_verified == true) || data.child('userId').val() == auth.uid)",
+        ".write": false,
+        ".validate": "newData.hasChildren(['appointmentId', 'userId', 'amount', 'method', 'status', 'createdAt']) && newData.child('userId').isString() && newData.child('amount').isNumber()"
+      }
+    },
+    "paymobIntents": {
+      "$appointmentId": {
+        ".read": false,
+        ".write": false
+      }
+    },
+    "medicalRecords": {
+      ".indexOn": [
+        "patientId",
+        "doctorId"
+      ],
+      ".read": "auth != null && (auth.token.admin == true || ((auth.token.email == 'abdoaltyp8@gmail.com' || auth.token.email == 'admin@sahty.com') && auth.token.email_verified == true) || (query.orderByChild == 'patientId' && query.equalTo == auth.uid) || (root.child('users').child(auth.uid).child('role').val() == 'DOCTOR' && root.child('users').child(auth.uid).child('status').val() == 'VERIFIED' && query.orderByChild == 'doctorId' && query.equalTo == auth.uid))",
+      "$recordId": {
+        ".read": "auth != null && (auth.token.admin == true || ((auth.token.email == 'abdoaltyp8@gmail.com' || auth.token.email == 'admin@sahty.com') && auth.token.email_verified == true) || data.child('patientId').val() == auth.uid || (root.child('users').child(auth.uid).child('role').val() == 'DOCTOR' && root.child('users').child(auth.uid).child('status').val() == 'VERIFIED' && data.child('doctorId').val() == auth.uid && root.child('appointments').child(data.child('appointmentId').val()).child('doctorId').val() == auth.uid && root.child('appointments').child(data.child('appointmentId').val()).child('patientId').val() == data.child('patientId').val()))",
+        ".write": "auth != null && (auth.token.admin == true || ((auth.token.email == 'abdoaltyp8@gmail.com' || auth.token.email == 'admin@sahty.com') && auth.token.email_verified == true) || (root.child('users').child(auth.uid).child('role').val() == 'DOCTOR' && root.child('users').child(auth.uid).child('status').val() == 'VERIFIED' && newData.child('doctorId').val() == auth.uid && root.child('appointments').child(newData.child('appointmentId').val()).child('doctorId').val() == auth.uid && root.child('appointments').child(newData.child('appointmentId').val()).child('patientId').val() == newData.child('patientId').val()))",
+        ".validate": "newData.hasChildren(['patientId', 'doctorId', 'appointmentId', 'type', 'title', 'fileURL', 'createdAt'])"
+      }
+    }
+  }
+}
